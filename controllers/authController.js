@@ -2,6 +2,8 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
 
 
 
@@ -54,3 +56,60 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found with this email' });
+    }
+
+    const resetToken = user.getResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/users/resetpassword/${resetToken}`;
+
+    const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Password Reset Token',
+      message,
+    });
+
+    res.status(200).json({ message: 'Email sent' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Email could not be sent' });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    // Assuming req.user._id is set by your authentication middleware
+    const user = await User.findById(req.user._id).select('+password');
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash the new password before saving
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    // You might want to remove sensitive information or use a DTO before sending the response
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error(error); // Logging the error to the console for debugging
+    res.status(500).json({ message: error.message });
+  }
+};
+
