@@ -1,4 +1,3 @@
-// controllers/categoryController.js
 const Category = require('../models/Category');
 
 // Create Category

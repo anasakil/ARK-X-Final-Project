@@ -113,3 +113,20 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+
+
+exports.logout= async(req,res)=>{
+  try{
+    res.cookie('token','none',{
+      expires: new Date(0),
+      httpOnly:true
+    })
+    res.status(200).json({ message: 'Logged out successfully' });
+  }catch(err){
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+  }
+
+
+
