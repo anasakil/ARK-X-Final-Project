@@ -22,20 +22,10 @@ router.post('/login', [
 
 router.post('/forgotpassword', authController.forgotPassword);
 
-// Make sure `authMiddleware.protect` and `changePassword` are correctly referenced
 router.put('/changePassword', authMiddleware.protect, authController.changePassword);
 
 
-router.get('/logout', (req, res) => {
-    res.cookie('token', '', {
-      httpOnly: true,
-      expires: new Date(0), // Set to expire immediately
-      secure: process.env.NODE_ENV === 'production', // Use secure in production
-      sameSite: 'strict', // CSRF protection
-    });
-    
-    res.status(200).json({ message: 'Logged out successfully' });
-  });
+router.get('/logout', authController.logout );
   
 
 router.get('/', authMiddleware.protect, authMiddleware.restrictTo('admin'), userController.getAllUsers);
