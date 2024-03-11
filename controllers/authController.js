@@ -98,6 +98,9 @@ exports.changePassword = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: 'Current password is incorrect' });
     }
+     // Hash the new password before saving
+     const salt = await bcrypt.genSalt(10);
+     user.password = await bcrypt.hash(newPassword, salt);
 
 
 
