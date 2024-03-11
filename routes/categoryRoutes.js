@@ -1,23 +1,16 @@
-// routes/categoryRoutes.js
 const express = require('express');
-const {
-  createCategory,
-  getAllCategories,
-  getCategoryById,
-  updateCategory,
-  deleteCategory
-} = require('../controllers/categoryController');
-const { protect, restrictTo } = require('../middlewares/authMiddleware');
+const categoryController = require('../controllers/categoryController');
+const  authController = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
 router.route('/')
-  .get(getAllCategories)
-  .post(protect, restrictTo('admin'), createCategory);
+  .get(categoryController.getAllCategories)
+  .post( authController.protect,  authController.restrictTo('admin'), categoryController.createCategory);
 
 router.route('/:id')
-  .get(getCategoryById)
-  .patch(protect, restrictTo('admin'), updateCategory)
-  .delete(protect, restrictTo('admin'), deleteCategory);
+  .get(categoryController.getCategoryById)
+  .patch( authController.protect,  authController.restrictTo('admin'), categoryController.updateCategory)
+  .delete( authController.protect, authController.restrictTo('admin'), categoryController.deleteCategory);
 
 module.exports = router;
